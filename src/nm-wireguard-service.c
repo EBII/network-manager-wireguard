@@ -371,8 +371,8 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 	if(setting){
 		val = ip4_to_gvariant(setting);
 		if(val){
-			g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_ADDRESS, val);
-
+//			g_variant_builder_add(&ip4builder, "{sv}", NM_VPN_PLUGIN_IP4_CONFIG_ADDRESS, val);
+			g_variant_builder_add(&dns_builder, "{sv}", NMV_WG_TAG_DNS, val);  // Fix g_variant_new_string: assertion 'g_utf8_validate (string, -1, NULL)' failed
 			// try to find the subnet from the IP
 			if(g_strrstr(setting, "/")){
 				gchar **tmp;
@@ -391,60 +391,60 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 	setting = get_setting(s_vpn, NM_WG_KEY_DNS);
 	if(setting){
 		// TODO
-		
 		val = g_variant_new_string(setting);
-		g_variant_builder_add(&dns_builder, "{sv}", NMV_WG_TAG_DNS, val);
+		g_variant_builder_add(&dns_builder, "{ss}", NMV_WG_TAG_DNS, val);
 		has_dns = TRUE;
 	}
 
 	setting = get_setting(s_vpn, NM_WG_KEY_ENDPOINT);
 	if(setting){
-		char *p;
-		int q = 0;
-		int l = strlen(setting);
-		for(int i=0; i<l; i++){
-			if(setting[i]==':'){
-				q++;
+		// TODO
+ 		char *p;
+ 		int q = 0;
+ 		int l = strlen(setting);
+ 		for(int i=0; i<l; i++){
+ 			if(setting[i]==':'){
+ 				q++;
 			}
-		}
-		if(q>1){
-			// Look like IPv6
-			val = ip6_to_gvariant(setting);
-			if(val){
-				g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
-			}
-		}else{
-			// IPv4 or domain name.
-			p = strstr(setting, ":");
-			if(p){
-				// Delete :port.
- 			p[0]='\0'; 
-			}
-			val = ip4_to_gvariant(setting);
-			if(val){
-				// Is IP address. 
-				// NM_VPN_PLUGIN_IP4_CONFIG_GATEWAY == NM_VPN_PLUGIN_IP4_CONFIG_EXT_GATEWAY == NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY
-				g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
-			}else{
-				// Is hostname or domain name.
-				struct hostent *host;
-				char buff[17];
-				if ((host = gethostbyname2(setting, AF_INET)) != NULL){
-					inet_ntop(AF_INET, (struct in_addr *)host->h_addr_list[0], buff, sizeof(buff));
-					val = ip4_to_gvariant(buff);
-					if(val){
-						g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
-					}
-				}else if((host = gethostbyname2(setting, AF_INET6)) != NULL){
-					inet_ntop(AF_INET6, (struct in_addr *)host->h_addr_list[0], buff, sizeof(buff));
-					val = ip6_to_gvariant(buff);
-					if(val){
-						g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
-					}
-				}
-			}
-		}
-		
+ 		}
+ 		if(q>1){
+ 			// Look like IPv6
+ 			val = ip6_to_gvariant(setting);
+ 			if(val){
+ 				g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
+ 			}
+
+ 		}else{
+ 			// IPv4 or domain name.
+ 			p = strstr(setting, ":");
+ 			if(p){
+ 				// Delete :port.
+ 				p[0]='\0'; 
+ 			}
+ 			val = ip4_to_gvariant(setting);
+ 			if(val){
+ 				// Is IP address. 
+ 				// NM_VPN_PLUGIN_IP4_CONFIG_GATEWAY == NM_VPN_PLUGIN_IP4_CONFIG_EXT_GATEWAY == NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY
+ 				g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
+ 			}else{
+ 				// Is hostname or domain name.
+ 				struct hostent *host;
+ 				char buff[17];
+ 				if ((host = gethostbyname2(setting, AF_INET)) != NULL){
+ 					inet_ntop(AF_INET, (struct in_addr *)host->h_addr_list[0], buff, sizeof(buff));
+ 					val = ip4_to_gvariant(buff);
+ 					if(val){
+ 						g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
+ 					}
+ 				}else if((host = gethostbyname2(setting, AF_INET6)) != NULL){
+ 					inet_ntop(AF_INET6, (struct in_addr *)host->h_addr_list[0], buff, sizeof(buff));
+ 					val = ip6_to_gvariant(buff);
+ 					if(val){
+ 						g_variant_builder_add(&builder, "{sv}", NM_VPN_PLUGIN_CONFIG_EXT_GATEWAY, val);
+ 					}
+ 				}
+ 			}
+ 		}
 	}
 
 	setting = get_setting(s_vpn, NM_WG_KEY_MTU);
