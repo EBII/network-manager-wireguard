@@ -44,6 +44,7 @@
 #include <grp.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <netdb.h>
 #include <glib-unix.h>
 
 #include "utils.h"
@@ -398,7 +399,7 @@ set_config(NMVpnServicePlugin *plugin, NMConnection *connection)
 
 	setting = get_setting(s_vpn, NM_WG_KEY_ENDPOINT);
 	if(setting){
-		// TODO
+		// TODOglib
  		char *p;
  		int q = 0;
  		int l = strlen(setting);
